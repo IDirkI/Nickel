@@ -45,3 +45,11 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --specs=nano.specs")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-Map=${CMAKE_PROJECT_NAME}.map -Wl,--gc-sections")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--print-memory-usage")
 set(TOOLCHAIN_LINK_LIBRARIES "m")
+
+# Set compiler flags
+add_compile_options(
+    -fno-exceptions
+    -fno-rtti
+    -fno-threadsafe-statics
+    --specs=nosys.specs
+)
