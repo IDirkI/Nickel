@@ -1,32 +1,50 @@
-# Prerequisites
-*.d
+# ─── Build Output ───────────────────────────────────────────────
+build/
+out/
+cmake-build-*/
+*.elf
+*.bin
+*.hex
+*.map
+*.lst
+*.axf
 
-# Compiled Object files
-*.slo
-*.lo
+# ─── CMake Generated ────────────────────────────────────────────
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+CPackConfig.cmake
+CPackSourceConfig.cmake
+compile_commands.json
+
+# ─── VS Code ────────────────────────────────────────────────────
+.vscode/*
+!.vscode/extensions.json
+!.vscode/tasks.json
+!.vscode/launch.json
+
+# ─── ARM Toolchain / Compiler Artifacts ─────────────────────────
 *.o
-*.obj
+*.d
+*.su         # stack usage files
+*.cyclo      # cyclomatric complexity (CubeIDE artifact, may appear)
 
-# Precompiled Headers
-*.gch
-*.pch
+# ─── OpenOCD / Debug ────────────────────────────────────────────
+*.cfg.bak
+openocd.log
 
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
+# ─── STM32CubeMX ────────────
+*.cproject
+*.project
+*.mxproject
+STM32CubeMX/
+.settings/*
 
-# Fortran module files
-*.mod
-*.smod
+# ─── OS Junk ────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+*~
 
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
-
-# Executables
-*.exe
-*.out
-*.app
+# ─── Logs ───────────────────────────────────────────────────────
+*.log
