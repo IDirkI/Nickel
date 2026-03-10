@@ -1,6 +1,7 @@
 #include "app.hpp"
 #include "Debug/log.hpp"
 #include "Debug/assert.hpp"
+#include "Common/timer.hpp"
 
 extern "C" {
     #include "stm32f4xx_hal.h"
