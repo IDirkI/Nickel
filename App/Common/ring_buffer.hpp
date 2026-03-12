@@ -18,17 +18,18 @@ namespace nickel::common {
 // ==========================
 /**
  *  @brief Fixed-size, single producer-single consumer, general purpose ring buffer
- *  @note   Use size of power of 2 for masking
+ *  @note  Use size of power of 2 for masking wrap
  */
-template<index_t N>
+template<index_t N, typename T = uint8_t>
 class RingBuff {
-    static_assert(N > 0, "RingBuffer size must be positive");
-    static_assert((N & (N-1)) == 0, "RingBuffer size must be positive");
+    static_assert(N > 0, "RingBuff size must be positive");
+    static_assert((N & (N-1)) == 0, "RingBuff size must be positive");
+    static_assert(std::is_trivially_copyable<T>::value, "RingBuff<T> requires trivially copyable type T");
 
     private:
         static constexpr index_t MASK = N - 1;
 
-        uint8_t buff_[N];
+        T buff_[N];
         index_t head_;  // write index
         index_t tail_;  // read index
 
@@ -42,7 +43,7 @@ class RingBuff {
          *  @return Status of push operation. BUSY if buffer is full
          *  @note It is the caller's responsibility to check the buffer state before pushing new data.
          */
-        Status push(uint8_t data) {
+        Status push(T data) {
             if(isFull()) { return Status::BUSY; }
 
             buff_[head_ & MASK] = data;
@@ -55,7 +56,7 @@ class RingBuff {
          *  @return Status of push operation. BUSY if buffer does not have enough space for all data
          *  @note It is the caller's responsibility to check the buffer state before pushing new data.
          */
-        Status push(const uint8_t *data, size_t length) {
+        Status push(const T *data, size_t length) {
             if(writable() < length) { return Status::BUSY; }
             RINGBUFF_ENTER_CRITICAL();
             for(index_t i = 0; i < length; i++) {
@@ -71,7 +72,9 @@ class RingBuff {
          *  @return Status of push operation. BUSY if buffer does not have enough space for all data
          *  @note It is the caller's responsibility to check the buffer state before pushing new data.
          */
-        Status push(const char *str, size_t length) {
+        template<typename U = T>
+        typename std::enable_if<std::is_same<U, uint8_t>::value, Status>::type
+        push(const char *str, size_t length) {
             return push(reinterpret_cast<const uint8_t *>(str), length);
         }
 
@@ -81,7 +84,7 @@ class RingBuff {
          *  @return Status of pop operation. NOT_READY if buffer is empty
          *  @note It is the caller's responsibility to check the buffer state before popping data.
          */
-        Status pop(uint8_t &data) {
+        Status pop(T &data) {
             if(isEmpty()) { return Status::NOT_READY; }
 
             data = buff_[tail_ & MASK];
@@ -89,12 +92,12 @@ class RingBuff {
             return Status::OK;
         }
 
-        /*
+        /**
          *  @brief Peek at the next byte(s) to be popped without removing them from the buffer
          *  @return Pointer to the start of the readable data and its length. nullptr if buffer is empty
          *  @note It is the caller's responsibility to check the buffer state before peeking data.
          */
-        const uint8_t *peek_data(size_t &length) const {
+        const T *peek_data(size_t &length) const {
             size_t idxTail = tail_ & MASK;
             size_t idxHead = head_ & MASK;
 

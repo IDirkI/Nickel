@@ -18,8 +18,8 @@ using namespace nickel::log;
 namespace nickel::log {
 
 // ───── Private Helpers ────────────────────────────────────────────────────────────
-constexpr uint16_t BUFFER_SIZE = 256;
-static RingBuff<512> txBuff;
+constexpr uint16_t BUFFER_SIZE = 2048;
+static RingBuff<BUFFER_SIZE> txBuff;
 
 static size_t txIncoming = 0;
 static bool flag_initialized = false;
@@ -62,11 +62,19 @@ Status uart_write(const char *str, uint16_t length) {
  *  @brief Initialize the logging system (must be called before any other Log functions)
  *  @return Status of initialization
  */
-Status init(void) {
+Status log_init(void) {
     flag_initialized = true;
+    LOG_SEPARATOR("Boot Sequence");
+    LOG_BOOT("LOG");
     return Status::OK;
 }
 
+/**
+ *  @brief Print a formatted log message. Message is sent to both SWO and USART3 (if not busy).
+ *  @param fmt printf-style format string
+ *  @param ... variadic arguments for format string
+ *  @return Status of the operation. Returns `Status::OK` if the message was printed successfully, `Status::NOT_READY` if the logger is not initialized, or `Status::ERR` if there was an error formatting the string.
+ */
 Status print(const char *fmt, ...) {
     if(!flag_initialized) { return Status::NOT_READY; }
 
@@ -87,6 +95,13 @@ Status print(const char *fmt, ...) {
     return uart_write(tmp_buff, static_cast<uint16_t>(length));
 }
 
+/**
+ *  @brief Print a hex dump of the given data buffer. Output is sent to both SWO and USART3 (if not busy).
+ *  @param data Pointer to the data buffer to dump
+ *  @param length Length of the data buffer in bytes
+ *  @param label Optional label to include in the log output
+ *  @return Status of the operation. Returns `Status::OK` if the hex dump was printed successfully, `Status::NOT_READY` if the logger is not initialized, or `Status::INVALID_ARG` if the data pointer is null.
+ */
 Status hex_dump(const uint8_t *data, uint16_t length, const char *label) {
     if(!flag_initialized) { return Status::NOT_READY; }
     if(data == nullptr) { return Status::INVALID_ARG; }
@@ -102,6 +117,13 @@ Status hex_dump(const uint8_t *data, uint16_t length, const char *label) {
     return Status::OK;
 }
 
+/**
+ *  @brief Print an array of uint16_t values. Output is sent to both SWO and USART3 (if not busy).
+ *  @param data Pointer to the array of uint16_t values
+ *  @param length Number of elements in the array
+ *  @param label Optional label to include in the log output
+ *  @return Status of the operation. Returns `Status::OK` if the array was printed successfully, `Status::NOT_READY` if the logger is not initialized, or `Status::INVALID_ARG` if the data pointer is null.
+ */
 Status array_u16(const uint16_t *data, uint16_t length, const char *label) {
     if(!flag_initialized) { return Status::NOT_READY; }
     if(data == nullptr) { return Status::INVALID_ARG; }
@@ -113,6 +135,13 @@ Status array_u16(const uint16_t *data, uint16_t length, const char *label) {
     return Status::OK;
 }
 
+/**
+ *  @brief Print an array of float32_t values. Output is sent to both SWO and USART3 (if not busy).
+ *  @param data Pointer to the array of float32_t values
+ *  @param length Number of elements in the array
+ *  @param label Optional label to include in the log output
+ *  @return Status of the operation. Returns `Status::OK` if the array was printed successfully, `Status::NOT_READY` if the logger is not initialized, or `Status::INVALID_ARG` if the data pointer is null.
+ */
 Status array_f32(const float32_t *data, uint16_t length, const char *label) {
     if(!flag_initialized) { return Status::NOT_READY; }
     if(data == nullptr) { return Status::INVALID_ARG; }
@@ -122,6 +151,23 @@ Status array_f32(const float32_t *data, uint16_t length, const char *label) {
         log::print("%.4f%s", data[i], i < length - 1 ? ", " : " ]\r\n");
     }
     return Status::OK;
+}
+
+/**
+ *  @brief Get a string representation of a Status enum value
+ *  @param s Status value to convert to string
+ *  @return C-string representation of the Status value
+ */
+const char* status_str(Status s) {
+    switch(s) {
+        case Status::OK:          return "OK";
+        case Status::ERR:         return "ERR";
+        case Status::BUSY:        return "BUSY";
+        case Status::TIMEOUT:     return "TIMEOUT";
+        case Status::INVALID_ARG: return "INVALID_ARG";
+        case Status::NOT_READY:   return "NOT_READY";
+        default:                  return "UNKNOWN";
+    }
 }
 
 } // namespace namespace::log
